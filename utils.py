@@ -7,6 +7,9 @@ from keras.models import load_model
 from pandas.io.parsers import read_csv
 from sklearn.utils import shuffle
 
+# NOTE: check this blog post out: http://danielnouri.org/notes/2014/12/17/using-convolutional-neural-nets-to-detect-facial-keypoints-tutorial/
+# for more details. see the beginning 'The Data' section for breakdown of load_data() which he calls load()
+
 def load_data(test=False):
     """
     Loads data from FTEST if *test* is True, otherwise from FTRAIN.
@@ -29,7 +32,9 @@ def load_data(test=False):
 
     if not test:  # only FTRAIN has target columns
         y = df[df.columns[:-1]].values
-        y = (y - 48) / 48  # scale target coordinates to [-1, 1]
+        y = (y - 48) / 48  # scale target coordinates to [-1, 1] -> therefore the output of model will be normalized to be within this range
+        # and need to be readjusted back to the original images (x,y) coordinates to map back correctly on the original image which is done 
+        # in the plot_data method
         X, y = shuffle(X, y, random_state=42)  # shuffle train data
         y = y.astype(np.float32)
     else:
@@ -44,6 +49,9 @@ def plot_data(img, landmarks, axis):
     axis.imshow(np.squeeze(img), cmap='gray') # plot the image
     landmarks = landmarks * 48 + 48 # undo the normalization
     # Plot the keypoints
+    # NOTE: seems like the landmarks dots are just a list and their x,y coordinates are just adjacent to each other.
+    # therefore, first landmark dot 'x' value is indexed at 0 and it's 'y' value is indexed at 1. Then move by
+    # 2 for each dimension as to get the next point
     axis.scatter(landmarks[0::2], 
         landmarks[1::2], 
         marker='o', 
